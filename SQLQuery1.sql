@@ -7,22 +7,31 @@ create procedure p_insert_transaction
 ,@AMOUNT INT
 AS
 BEGIN
+/*INSERT DATA INTO TRANSACTION TABLES THAT IS CREDIT AND DEBIT TRANSACTION DETAILS*/
+
 	DECLARE @DATE_TIME DATETIME;
-	SET @DATE_TIME=GETDATE();
+	SET @DATE_TIME=GETDATE(); /*VARIABLE STORES CURRENT DATETIME*/
+
+	/*INSERT INTO DEBIT_TRANSACTION_DETAILS*/
 	INSERT INTO DEBIT_TRANSACTION_DETAILS(debit_account_no,debit_amount,debit_date_time) 
 	VALUES(@DEBIT_ACCOUNT_NO,@AMOUNT,@DATE_TIME)
 
+	/*ID VARIABLE GETS THE id from DEBIT_TRANSACTION_DETAILS
+	HERE WE ARE ARRANGING THE ROWS IN DESC ORDER w.r.t id and SELECTING TOP 1st id that is it gets the id of recently added row*/
 	DECLARE @ID INT;
 	SET @ID= (SELECT TOP 1 id FROM DEBIT_TRANSACTION_DETAILS ORDER BY id DESC );
 
-	/*INSERT DATA INTOTRANSACTION TABLES*/
+	
 
-
+		/*INSERT INTO CREDIT_TRANSACTION_DETAILS*/
 	INSERT INTO CREDIT_TRANSACTION_DETAILS(id_debit,credit_account_no,credit_amount,credit_date_time) 
 	VALUES(@ID,@CREDIT_ACCOUNT_NO,@AMOUNT,@DATE_TIME)
 
 
 	/* update the balance amount in ACCOUNT table based on the transactions*/
+
+	/*In debit account update balance amount by balance-amount
+	and in credit amount update balance amount by balance+amount*/
 	
 
 		DECLARE @VAR_AMOUNT INT;
