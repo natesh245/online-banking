@@ -12,6 +12,8 @@ BEGIN
 	DECLARE @DATE_TIME DATETIME;
 	SET @DATE_TIME=GETDATE(); /*VARIABLE STORES CURRENT DATETIME*/
 
+
+
 	/*INSERT INTO DEBIT_TRANSACTION_DETAILS*/
 	INSERT INTO DEBIT_TRANSACTION_DETAILS(debit_account_no,debit_amount,debit_date_time) 
 	VALUES(@DEBIT_ACCOUNT_NO,@AMOUNT,@DATE_TIME)
@@ -22,6 +24,8 @@ BEGIN
 	SET @ID= (SELECT TOP 1 id FROM DEBIT_TRANSACTION_DETAILS ORDER BY id DESC );
 
 	
+	
+	
 
 		/*INSERT INTO CREDIT_TRANSACTION_DETAILS*/
 	INSERT INTO CREDIT_TRANSACTION_DETAILS(id_debit,credit_account_no,credit_amount,credit_date_time) 
@@ -29,8 +33,7 @@ BEGIN
 
 
 	/* update the balance amount in ACCOUNT table based on the transactions*/
-
-	/*In debit account update balance amount by balance-amount
+		/*In debit account update balance amount by balance-amount
 	and in credit amount update balance amount by balance+amount*/
 	
 
@@ -46,10 +49,14 @@ BEGIN
 	SET @VAR_CREDITS_ACCOUNT_NO=(SELECT TOP 1 credit_account_no from	CREDIT_TRANSACTION_DETAILS ORDER BY id_debit DESC);
 
 	DECLARE @VAR_BALANCE_CREDIT BIGINT;
-	SET @VAR_BALANCE_CREDIT = (SELECT   balance from ACCOUNT WHERE account_no= @CREDIT_ACCOUNT_NO);
+	SET @VAR_BALANCE_CREDIT = (SELECT   balance from ACCOUNT   WHERE account_no= @VAR_CREDITS_ACCOUNT_NO);
 
 	DECLARE @VAR_BALANCE_DEBIT BIGINT;
-	SET @VAR_BALANCE_DEBIT = (SELECT   balance from ACCOUNT WHERE account_no= @DEBIT_ACCOUNT_NO);
+	SET @VAR_BALANCE_DEBIT = (SELECT   balance from ACCOUNT WHERE account_no= @VAR_DEBITS_ACCOUNT_NO);
+
+	DECLARE @TRANSACTION_ID INT ;
+	SET @TRANSACTION_ID=(SELECT TOP 1 id FROM DEBIT_TRANSACTION_DETAILS ORDER BY id DESC);
+
 	
 	
 	IF @VAR_AMOUNT>0
@@ -57,6 +64,14 @@ BEGIN
 		UPDATE ACCOUNT SET ACCOUNT.balance = @VAR_BALANCE_DEBIT- @VAR_AMOUNT WHERE account_no = @VAR_DEBITS_ACCOUNT_NO;
 
 		UPDATE ACCOUNT SET ACCOUNT.balance = @VAR_BALANCE_CREDIT + @VAR_AMOUNT WHERE account_no = @VAR_CREDITS_ACCOUNT_NO;
+
+		UPDATE CREDIT_TRANSACTION_DETAILS SET credit_account_balance=@VAR_BALANCE_CREDIT + @VAR_AMOUNT
+		WHERE id_debit =@TRANSACTION_ID;
+
+			UPDATE DEBIT_TRANSACTION_DETAILS SET debit_account_balance=@VAR_BALANCE_DEBIT - @VAR_AMOUNT
+		WHERE id = @TRANSACTION_ID;
+
+		
 	END
 END
 

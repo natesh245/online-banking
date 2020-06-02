@@ -111,6 +111,16 @@ create table TRANSACTION_DETAILS(
 
 	);
 
+	select * from DEBIT_TRANSACTION_DETAILS
+
+	alter table DEBIT_TRANSACTION_DETAILS
+	ADD debit_account_balance bigint 
+
+		alter table CREDIT_TRANSACTION_DETAILS
+	ADD credit_account_balance bigint 
+
+	select * from CREDIT_TRANSACTION_DETAILS
+
 	CREATE TABLE CREDIT_TRANSACTION_DETAILS(
 		id_debit int ,
 		foreign key (id_debit) references DEBIT_TRANSACTION_DETAILS (id),
