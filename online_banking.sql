@@ -131,21 +131,30 @@ create table TRANSACTION_DETAILS(
 	);
 
 create table FIXED_DEPOSIT(
+	deposit_id int primary key identity(100,1),
 	account_no bigint,
 	foreign key (account_no) references ACCOUNT (account_no),
-	balance bigint,
-	amount bigint,
-	duration Datetime,
+	fd_date date,
+	fd_amount int,
+	duration int,
 	rate_of_interest  int,
-	maturity_date datetime NOT NULL,
-	maturity_amount bigint,
-	transfer_to_account bigint  NOT NULL,
+	maturity_date date ,
+	maturity_amount int,
+	
 	nominee varchar(50)
 
 );
+
+drop table FIXED_DEPOSIT
 
 
 SELECT * FROM BRANCH
 SELECT * FROM ACCOUNT
 SELECT * FROM ACCOUNT_TYPE
 SELECT * FROM CUSTOMER
+
+
+SELECT id as customer_id,user_password as password from CUSTOMER
+
+
+update customer set user_password='shandar123' where id=1012
