@@ -12,14 +12,7 @@ where debit_account_no=@ACCOUNT or credit_account_no=@ACCOUNT order by id  desc 
 
 END
 
-MERGE DEBIT_TRANSACTION_DETAILS D
-    USING CREDIT_TRANSACTION_DETAILS C
-ON (D.id = C.id_debit)
-    THEN UPDATE SET 
-        t.category_name = s.category_name,
-        t.amount = s.amount
-WHEN NOT MATCHED BY TARGET 
-    THEN INSERT (category_id, category_name, amount)
-         VALUES (s.category_id, s.category_name, s.amount)
-WHEN NOT MATCHED BY SOURCE 
-    THEN DELETE;
+exec p_transaction_details 110010001111
+
+
+
