@@ -130,13 +130,19 @@ create table FIXED_DEPOSIT(
 	fd_date date,
 	fd_amount int,
 	duration int,
-	rate_of_interest  int,
+	rate_of_interest  decimal,
 	maturity_date date ,
 	maturity_amount int,
-	
-	nominee varchar(50)
+	nominee varchar(50),
+	nominee_relation varchar(50)
 
 );
+
+alter table FIXED_DEPOSIT
+alter column maturity_date varchar(20)
+
+alter table FIXED_DEPOSIT
+alter column rate_of_interest decimal(2,1)
 
 drop table FIXED_DEPOSIT
 
@@ -147,12 +153,13 @@ SELECT * FROM BRANCH
 SELECT * FROM ACCOUNT
 SELECT * FROM ACCOUNT_TYPE
 SELECT * FROM CUSTOMER
+select * from FIXED_DEPOSIT
 
 
 /*-------------TRANSACTION STORED PROCEDURE----------------------------*/
 
 
-CREATE procedure p_insert_transaction
+alter procedure p_insert_transaction
 
 (@DEBIT_ACCOUNT_NO BIGINT
 ,@CREDIT_ACCOUNT_NO BIGINT
@@ -226,7 +233,7 @@ BEGIN
 	END
 	ELSE
 		BEGIN
-			RAISERROR ( 'TRANSACTION FAILED AS ENTERED AMOUNT IS GREATER THAN THE AVAILABLE BALANCE',1,1);
+			RAISERROR ( 'TRANSACTION FAILED AS ENTERED AMOUNT IS GREATER THAN THE AVAILABLE BALANCE',15,1);
 
 	END
 	
@@ -251,7 +258,7 @@ EXEC p_insert_transaction 110010001113,110010001114,120
 
 /*------------------CUSTOMER STORED PROCEDURE-----------------------------------*/
 
-CREATE procedure p_update_customer_details
+alter procedure p_update_customer_details
 (@ID int,
 @FIRST_NAME varchar(50),
 @LAST_NAME varchar(50),
@@ -283,6 +290,7 @@ CREATE procedure p_transaction_details
 (@ACCOUNT BIGINT)
 AS 
 BEGIN
+	
 	select * from TRANSACTION_DETAILS 
 where debit_account_no=@ACCOUNT or credit_account_no=@ACCOUNT order by transaction_id  desc ;
 
@@ -296,8 +304,10 @@ create procedure fixed_deposit_sp
  @account_no bigint,
 @amount int,
 @duration INT,
-@nominee varchar(10)
+@Rate_of_interest double,
 
+@nominee varchar(50),
+@relation varchar(50)
 As 
 Begin
 
@@ -320,16 +330,16 @@ Begin
 			set @Rate_of_interest=4;
 			set @maturity_amount=@amount+((@amount*@Rate_of_interest*@duration)/100);
 
-			Insert into FIXED_DEPOSIT(account_no,fd_date,fd_amount,duration,rate_of_interest,maturity_date,maturity_amount,nominee)
-			Values(@account_no,GETDATE(),@amount,@duration,@Rate_of_interest,@maturity_date,@maturity_amount,@nominee)
+			Insert into FIXED_DEPOSIT(account_no,fd_date,fd_amount,duration,rate_of_interest,maturity_date,maturity_amount,nominee,nominee_relation)
+			Values(@account_no,GETDATE(),@amount,@duration,@Rate_of_interest,@maturity_date,@maturity_amount,@nominee,@relation)
 		End
 
 		Else 
 			Begin
 			set @rate_of_interest =4.25;
 			set @maturity_amount=@amount+((@amount*@Rate_of_interest*@duration)/100);
-			Insert into FIXED_DEPOSIT (account_no,fd_date,fd_amount,duration,rate_of_interest,maturity_date,maturity_amount,nominee)
-			Values(@account_no,@fddate,@amount,@duration,@Rate_of_interest,@maturity_date,@maturity_amount,@nominee);
+			Insert into FIXED_DEPOSIT (account_no,fd_date,fd_amount,duration,rate_of_interest,maturity_date,maturity_amount,nominee,nominee_relation)
+			Values(@account_no,@fddate,@amount,@duration,@Rate_of_interest,@maturity_date,@maturity_amount,@nominee,@relation);
 		end
 		UPDATE ACCOUNT SET ACCOUNT.balance = @balance- @AMOUNT WHERE account_no = @account_no;
 
@@ -338,14 +348,14 @@ Begin
 	END	
 	Else 
 	Begin
-		RAISERROR ('YOU NEED TO KEEP MINIMUM AMOUNT OF Rs 5000',1,1);
+		RAISERROR ('YOU NEED TO KEEP MINIMUM AMOUNT OF Rs 5000',15,1);
 	END
 END
 
 
 drop procedure fixed_deposit_sp
 
-Exec  fixed_deposit_sp 110010001111,5000,8,'natesh';
+Exec  fixed_deposit_sp 110010001114,5000,8,4.5,5700,'20210228','natesh','ddd'
 exec fixed_deposit_sp 110010001113,5000,5,'shandar';
 
 
@@ -354,7 +364,47 @@ exec fixed_deposit_sp 110010001113,5000,5,'shandar';
 	select * from CUSTOMER
 	SELECT * FROM FIXED_DEPOSIT
 
-	DELETE FROM FIXED_DEPOSIT 
+	DELETE FROM FIXED_DEPOSIT where deposit_id=114
 
 	SELECT * FROM BRANCH
 	SELECT * FROM ACCOUNT_TYPE
+
+	Exec  fixed_deposit_sp 110010001113,5000,8,4,5700,'natesh','fff';
+
+	alter procedure fixed_deposit_sp
+ @account_no bigint,
+@amount int,
+@duration INT,
+@Rate_of_interest decimal(2,1),
+@maturity_amount int,
+@maturity_date varchar(20),
+@nominee varchar(50),
+@relation varchar(50)
+As 
+Begin
+
+	Declare @fddate date;
+	Set @fddate=convert (date,getdate());
+
+	declare @balance bigint;
+	set @balance =(select balance from ACCOUNT where account_no=@account_no);
+
+	
+
+	
+	IF ((@balance>@amount) )
+	Begin
+
+	
+
+			Insert into FIXED_DEPOSIT(account_no,fd_date,fd_amount,duration,rate_of_interest,maturity_date,maturity_amount,nominee,nominee_relation)
+			Values(@account_no,GETDATE(),@amount,@duration,@Rate_of_interest,CONVERT(varchar, @maturity_date, 23),@maturity_amount,@nominee,@relation)
+	
+		UPDATE ACCOUNT SET balance=@balance- @amount
+		WHERE account_no =@account_no;
+	END	
+	Else 
+	Begin
+			RAISERROR ('YOU NEED TO KEEP MINIMUM AMOUNT OF Rs 5000',15,1);
+	END
+END
